@@ -84,6 +84,35 @@ namespace ElectronNET.API
 
         private event Action _didFinishLoad;
 
+        /// <summary>
+        /// Emitted when the link highligted by moving cursor.
+        /// </summary>
+        public event Action<string> OnUpdateTargetUrl
+        {
+            add
+            {
+                if (_updateTargetUrl == null)
+                {
+                    BridgeConnector.Socket.On("webContents-updateTargetUrl" + Id, (url) =>
+                    {
+                        _updateTargetUrl((string)url);
+                    });
+
+                    BridgeConnector.Socket.Emit("register-webContents-updateTargetUrl", Id);
+                }
+                _updateTargetUrl += value;
+            }
+            remove
+            {
+                _updateTargetUrl -= value;
+
+                if (_updateTargetUrl == null)
+                    BridgeConnector.Socket.Off("webContents-updateTargetUrl" + Id);
+            }
+        }
+
+        private event Action<string> _updateTargetUrl;
+
         internal WebContents(int id)
         {
             Id = id;
