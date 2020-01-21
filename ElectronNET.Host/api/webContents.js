@@ -27,6 +27,13 @@ module.exports = (socket) => {
             electronSocket.emit('webContents-didFinishLoad' + id);
         });
     });
+    socket.on('register-webContents-updateTargetUrl', (id) => {
+        const browserWindow = getWindowById(id);
+        browserWindow.webContents.removeAllListeners('update-target-url');
+        browserWindow.webContents.on('update-target-url', (event, url) => {
+            electronSocket.emit('webContents-updateTargetUrl' + id, url);
+        });
+    });
     socket.on('webContentsOpenDevTools', (id, options) => {
         if (options) {
             getWindowById(id).webContents.openDevTools(options);
