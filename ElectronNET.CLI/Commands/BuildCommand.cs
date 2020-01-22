@@ -40,6 +40,7 @@ namespace ElectronNET.CLI.Commands
         private string _paramOutputDirectory = "relative-path";
         private string _paramAbsoluteOutput = "absolute-path";
         private string _paramPackageJson = "package-json";
+        private string _paramPauseAfterPublish = "publish-pause";
         private string _paramForceNodeInstall = "install-modules";
         private string _manifest = "manifest";
 
@@ -94,13 +95,22 @@ namespace ElectronNET.CLI.Commands
                 string tempBinPath = Path.Combine(tempPath, "bin");
 
                 Console.WriteLine($"Build ASP.NET Core App for {platformInfo.NetCorePublishRid} under {configuration}-Configuration...");
+                string publishCommand = $"dotnet publish -r {platformInfo.NetCorePublishRid} -c {configuration} --output \"{tempBinPath}\"";
 
-                var resultCode = ProcessHelper.CmdExecute($"dotnet publish -r {platformInfo.NetCorePublishRid} -c {configuration} --output \"{tempBinPath}\"", Directory.GetCurrentDirectory());
+                Console.WriteLine($"Executing dotnet publish {Environment.NewLine}command: {publishCommand}{Environment.NewLine}in: {Directory.GetCurrentDirectory()}");
+                var resultCode = ProcessHelper.CmdExecute(publishCommand, Directory.GetCurrentDirectory());
 
                 if (resultCode != 0)
                 {
                     Console.WriteLine("Error occurred during dotnet publish: " + resultCode);
                     return false;
+                }
+
+                if (parser.Arguments.ContainsKey(_paramPauseAfterPublish))
+                {
+                    Console.WriteLine("Paused. dotnet publish successful. Hit any key to continue...");
+                    Console.ReadKey(true);
+                    Console.WriteLine("Continue build...");
                 }
 
                 DeployEmbeddedElectronFiles.Do(tempPath);
