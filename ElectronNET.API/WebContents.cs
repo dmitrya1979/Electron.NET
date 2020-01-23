@@ -113,6 +113,93 @@ namespace ElectronNET.API
 
         private event Action<string> _updateTargetUrl;
 
+        /// <summary>
+        /// Emitted when the page redirection occurred.
+        /// </summary>
+        public event Action<string> OnWillNavigate
+        {
+            add
+            {
+                if (_willNavigate == null)
+                {
+                    BridgeConnector.Socket.On("webContents-willNavigate" + Id, (url) =>
+                    {
+                        _willNavigate((string)url);
+                    });
+
+                    BridgeConnector.Socket.Emit("register-webContents-willNavigate", Id);
+                }
+                _willNavigate += value;
+            }
+            remove
+            {
+                _willNavigate -= value;
+
+                if (_willNavigate == null)
+                    BridgeConnector.Socket.Off("webContents-willNavigate" + Id);
+            }
+        }
+
+        private event Action<string> _willNavigate;
+
+        /// <summary>
+        /// Emitted when the page redirection occurred.
+        /// </summary>
+        public event Action<string> OnWillRedirect
+        {
+            add
+            {
+                if (_willRedirect == null)
+                {
+                    BridgeConnector.Socket.On("webContents-willRedirect" + Id, (url) =>
+                    {
+                        _willRedirect((string)url);
+                    });
+
+                    BridgeConnector.Socket.Emit("register-webContents-willRedirect", Id);
+                }
+                _willRedirect += value;
+            }
+            remove
+            {
+                _willRedirect -= value;
+
+                if (_willRedirect == null)
+                    BridgeConnector.Socket.Off("webContents-willRedirect" + Id);
+            }
+        }
+
+        private event Action<string> _willRedirect;
+
+        /// <summary>
+        /// Emitted when new window created.
+        /// </summary>
+        public event Action<string> OnNewWindow
+        {
+            add
+            {
+                if (_newWindow == null)
+                {
+                    BridgeConnector.Socket.On("webContents-newWindow" + Id, (url) =>
+                    {
+                        _newWindow((string)url);
+                    });
+
+                    BridgeConnector.Socket.Emit("register-webContents-newWindow", Id);
+                }
+                _newWindow += value;
+            }
+            remove
+            {
+                _newWindow -= value;
+
+                if (_newWindow == null)
+                    BridgeConnector.Socket.Off("webContents-newWindow" + Id);
+            }
+        }
+
+        private event Action<string> _newWindow;
+
         internal WebContents(int id)
         {
             Id = id;

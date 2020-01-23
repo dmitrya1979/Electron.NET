@@ -34,6 +34,36 @@ module.exports = (socket) => {
             electronSocket.emit('webContents-updateTargetUrl' + id, url);
         });
     });
+    socket.on('register-webContents-newWindow', (id) => {
+        const browserWindow = getWindowById(id);
+        browserWindow.webContents.removeAllListeners('new-window');
+        browserWindow.webContents.on('new-window', (event, url) => {
+            // prevent window creation
+            event.preventDefault();
+            // fire c# event
+            electronSocket.emit('webContents-newWindow' + id, url);
+        });
+    });
+    socket.on('register-webContents-willNavigate', (id) => {
+        const browserWindow = getWindowById(id);
+        browserWindow.webContents.removeAllListeners('will-navigate');
+        browserWindow.webContents.on('will-navigate', (event, url) => {
+            // prevent navigation
+            event.preventDefault();
+            // fire c# event
+            electronSocket.emit('webContents-willNavigate' + id, url);
+        });
+    });
+    socket.on('register-webContents-willRedirect', (id) => {
+        const browserWindow = getWindowById(id);
+        browserWindow.webContents.removeAllListeners('will-redirect');
+        browserWindow.webContents.on('will-redirect', (event, url) => {
+            // prevent redirection
+            event.preventDefault();
+            // fire c# event
+            electronSocket.emit('webContents-willRedirect' + id, url);
+        });
+    });
     socket.on('webContentsOpenDevTools', (id, options) => {
         if (options) {
             getWindowById(id).webContents.openDevTools(options);
