@@ -2,7 +2,7 @@
 const electron_1 = require("electron");
 const path = require('path');
 const windows = [];
-let window, lastOptions, electronSocket;
+let window, windowHidden, electronSocket;
 module.exports = (socket, app) => {
     electronSocket = socket;
     socket.on('register-browserWindow-ready-to-show', (id) => {
@@ -169,7 +169,6 @@ module.exports = (socket, app) => {
             options = Object.assign(Object.assign({}, options), { webPreferences: { nodeIntegration: true } });
         }
         window = new electron_1.BrowserWindow(options);
-        lastOptions = options;
         window.on('closed', (sender) => {
             for (let index = 0; index < windows.length; index++) {
                 const windowItem = windows[index];
@@ -186,11 +185,29 @@ module.exports = (socket, app) => {
                 }
             }
         });
+
+        // replace window close logic with hide logic
+        windowHidden = false;
+
+        function onCustomClose(event) {
+            // prevent action if window's close(x) button clicked
+            event.preventDefault();
+            event.sender.hide();
+            windowHidden = true;
+        }
+        window.on('close', onCustomClose);
+
+        app.on('before-quit', (event) => {
+            // remove custom close logic if app quits by menu command
+            // (not window close)
+            window.off('close', onCustomClose);
+        });
+
         app.on('activate', () => {
-            // On macOS it's common to re-create a window in the app when the
-            // dock icon is clicked and there are no other windows open.
-            if (window === null && lastOptions) {
-                window = new electron_1.BrowserWindow(lastOptions);
+            // show window when dock icon is clicked on macOS
+            if (windowHidden) {
+                window.show();
+                windowHidden = false;
             }
         });
         if (loadUrl) {
