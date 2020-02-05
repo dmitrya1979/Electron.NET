@@ -258,5 +258,11 @@ namespace ElectronNET.API.Entities
         /// Settings of web page's features.
         /// </summary>
         public WebPreferences WebPreferences { get; set; }
+
+        /// <summary>
+        /// Hides window by close button instead of destroying
+        /// </summary>
+        [DefaultValue(false)]
+        public bool HideOnClose { get; set; } = false;
     }
 }

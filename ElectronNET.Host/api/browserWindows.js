@@ -2,7 +2,8 @@
 const electron_1 = require("electron");
 const path = require('path');
 const windows = [];
-let window, windowHidden, electronSocket;
+let window, electronSocket;
+const windowsData = new Map();
 module.exports = (socket, app) => {
     electronSocket = socket;
     socket.on('register-browserWindow-ready-to-show', (id) => {
@@ -169,6 +170,9 @@ module.exports = (socket, app) => {
             options = Object.assign(Object.assign({}, options), { webPreferences: { nodeIntegration: true } });
         }
         window = new electron_1.BrowserWindow(options);
+        if (options.hideOnClose) {
+            windowsData.set(window.id, { window, options, hidden: false });
+        }
         window.on('closed', (sender) => {
             for (let index = 0; index < windows.length; index++) {
                 const windowItem = windows[index];
@@ -187,29 +191,41 @@ module.exports = (socket, app) => {
         });
 
         // replace window close logic with hide logic
-        windowHidden = false;
 
         function onCustomClose(event) {
-            // prevent action if window's close(x) button clicked
-            event.preventDefault();
-            event.sender.hide();
-            windowHidden = true;
+            const windowData = windowsData.get(event.sender.id);
+            if (windowData && windowData.options.hideOnClose) {
+                // prevent action if window's close(x) button clicked
+                event.preventDefault();
+                event.sender.hide();
+                windowData.hidden = true;
+            }
         }
         window.on('close', onCustomClose);
 
         app.on('before-quit', (event) => {
             // remove custom close logic if app quits by menu command
             // (not window close)
-            window.off('close', onCustomClose);
+            for (let index = 0; index < windows.length; index++) {
+                const windowItem = windows[index];
+                try {
+                    windowItem.off('close', onCustomClose);
+                }
+                catch (error) {
+                }
+            }
         });
 
         app.on('activate', () => {
             // show window when dock icon is clicked on macOS
-            if (windowHidden) {
-                window.show();
-                windowHidden = false;
+            for (let [id, windowData] of windowsData) {
+                if (windowData.hidden) {
+                    windowData.window.show();
+                    windowData.hidden = false;
+                }
             }
         });
+
         if (loadUrl) {
             window.loadURL(loadUrl);
         }
