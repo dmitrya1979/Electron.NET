@@ -1,4 +1,4 @@
-﻿using ElectronNET.API.Entities;
+using ElectronNET.API.Entities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -235,6 +235,15 @@ namespace ElectronNET.API
         public void Write(Data data, string type = "")
         {
             BridgeConnector.Socket.Emit("clipboard-write", JObject.FromObject(data, _jsonSerializer), type);
+        }
+
+        /// <summary>
+        /// Writes image to the clipboard.
+        /// </summary>
+        /// <param name="dataURL">Image data</param>
+        public void WriteImage(string dataURL)
+        {
+            BridgeConnector.Socket.Emit("clipboard-write-img-data-url", dataURL);
         }
 
         private JsonSerializer _jsonSerializer = new JsonSerializer()
